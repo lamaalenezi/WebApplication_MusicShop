@@ -1,0 +1,79 @@
+﻿@model IEnumerable<WebApplication_MusicShop.Models.Song>
+
+<style>
+    .card:hover {
+        transform: scale(1.01);
+        box-shadow: 0 10px 20px rgba(0,0,0,.12), 0 4px 8px rgba(0,0,0,.06);
+    }
+
+    .card {
+        border-radius: 4px;
+        background: #fff;
+        box-shadow: 0 6px 10px rgba(0,0,0,.08), 0 0 6px rgba(0,0,0,.05);
+        transition: .3s transform cubic-bezier(.155,1.105,.295,1.12),.3s box-shadow,.3s -webkit-transform cubic-bezier(.155,1.105,.295,1.12);
+        
+        cursor: pointer;
+    }
+
+</style>
+
+@if (Model.Any())
+{
+    <div class="row ">
+        @foreach (var item in Model)
+        {
+            <div class="col-sm-12 col-md-4 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title" id="@($"songTitle{item.SongId}")">@Html.DisplayFor(modelItem => item.Title)</h5>
+                        <p class="card-text badge bg-black">Genre: @Html.DisplayFor(modelItem => item.Genre.Name)</p>
+                        <p class="card-text">Performer: @Html.DisplayFor(modelItem => item.Performer.Name)</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex">
+                                <p class="card-text text-primary display-6">$</p><p class="card-text text-primary display-6" id="@($"songPrice{item.SongId}")">@item.Price</p>
+                            </div>
+                            <button onclick="addToCart(@(item.SongId))" class="btn btn-primary">Add to Cart</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+}
+else
+{
+    <div class="alert alert-info" role="alert">
+        No songs found.
+    </div>
+
+}
+
+<script>
+    function addToCart(songId) {
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+        // Check if the song is already in the cart
+        let cartItem = cart.find(item => item.songId === songId);
+        if (cartItem) {
+            cartItem.quantity += 1;
+        } else {
+
+            let songTitle = document.getElementById('songTitle' + songId).innerText;
+            let songPrice = document.getElementById('songPrice' + songId).innerText;
+            cart.push({ songId, songTitle, songPrice, quantity: 1 });
+        }
+
+        localStorage.setItem('cart', JSON.stringify(cart));
+        alert('Added to cart!');
+        updateCartBadge(cart.reduce((total, item) => total + item.quantity, 0));
+    }
+
+    function updateCartBadge(count) {
+        document.getElementById('cartBadge').textContent = count;
+    }
+
+    
+
+
+</script>

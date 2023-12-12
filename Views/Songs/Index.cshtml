@@ -1,0 +1,103 @@
+﻿@model IEnumerable<WebApplication_MusicShop.Models.Song>
+
+@{
+    ViewData["Title"] = "Music Shop";
+}
+
+<h1>Browse Music</h1>
+
+<div class="form-group">
+    <label for="genreSelect">Select Genre:</label>
+    <select class="form-control" id="genreSelect" onchange="loadPerformers()">
+        <option value="0">All Genres</option>
+        @foreach (var genre in ViewBag.Genres)
+        {
+            <option value="@genre.GenreId">@genre.Name</option>
+        }
+    </select>
+
+    <label for="performerSelect">Select Performer:</label>
+    <select class="form-control" id="performerSelect" onchange="loadSongs()">
+        <option value="0">Select Performer</option> 
+        <!-- Performers will be loaded dynamically -->
+    </select>
+
+</div>
+
+<div class="row">
+
+    <div id="songsList" class="row mt-5">
+        <!-- Songs will be rendered here -->
+
+    </div>
+
+   
+</div>
+
+@section Scripts {
+    <script>
+
+        function loadPerformers() {
+            var genreId = $('#genreSelect').val();
+            console.log(genreId);
+            $.ajax({
+                type: 'GET',
+                url: '@Url.Action("GetPerformersByGenre", "Songs")',
+                data: { genreId: genreId },
+                success: function (performers) {
+                    var performerSelect = $('#performerSelect');
+                    performerSelect.empty();
+                    performerSelect.append($('<option></option>').attr('value', '').text('Select Performer'));
+                    $.each(performers, function (index, performer) {
+                        performerSelect.append($('<option></option>').attr('value', performer.value).text(performer.text));
+                    });
+                }
+            });
+            loadSongs();
+        }
+
+        
+
+
+        function loadSongs() {
+            var performerId = $('#performerSelect').val();
+            var genreId = $('#genreSelect').val();
+            var url = performerId || genreId ? '/Songs/FilterSongs' : '/Songs/GetAllSongs';
+
+                $.ajax({
+                type: 'GET',
+                url: url,
+                data: { performerId: performerId, genreId: genreId },
+                success: function (data) {
+                    $('#songsList').html(data);
+                }
+            });
+            
+        }
+
+        function filterByGenre() {
+            var genreId = document.getElementById('genreSelect').value;
+            console.log(genreId);
+            $.ajax({
+                url: '@Url.Action("filterByGenre", "Songs")',
+                data: { genreId: genreId },
+                success: function (data) {
+                    $('#songsList').html(data);
+                }
+            });
+            loadSongs();
+        }
+
+
+        
+        function updateCartBadge(count) {
+            document.getElementById('cartBadge').textContent = count;
+        }
+
+       
+        // Update cart badge when the page loads
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        updateCartBadge(cart.reduce((total, item) => total + item.quantity, 0));
+        loadSongs();
+    </script>
+}
